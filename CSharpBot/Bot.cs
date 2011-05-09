@@ -101,6 +101,8 @@ namespace CSharpBot
 			channel = ParseChannel(channel);
 			_ircWriter.WriteLine("JOIN {0}", channel);
 			_joinedChannels.Add(channel);
+			if (_chanOps.ContainsKey(channel))
+				_chanOps.Remove(channel);
 			_chanOps.Add(channel, new List<string>());
 			Console.WriteLine("Joined channel: {0}", channel);
 		}
@@ -168,13 +170,24 @@ namespace CSharpBot
 			}
 		}
 
-		public bool IsOp(string channel, string user)
+		public int IsOp(string channel, string user)
 		{
 			channel = ParseChannel(channel);
+			foreach (var op in Globals.Ops)
+			{
+				if (user == op)
+				{
+					Console.WriteLine("IsOp: User \"{0}\" was found in the global ops array.", user);
+					return 2;
+				}
+			}
 			if (_chanOps.ContainsKey(channel))
 				if (_chanOps[channel].Contains(user))
-					return true;
-			return false;
+				{
+					Console.WriteLine("IsOp: User \"{0}\" is an op in channel {1}", user, channel);
+					return 1;
+				}
+			return 0;
 		}
 
 		public bool IsChannel(string channel)
@@ -196,6 +209,7 @@ namespace CSharpBot
 
 			_ircWriter.WriteLine("PART {0}", channel);
 			Console.WriteLine("Parted channel {0}", channel);
+			_joinedChannels.Remove(channel);
 		}
 
 		public void Quit()
