@@ -70,7 +70,7 @@ namespace CSharpBot
 
 		private void HandleCommand(string command, string channel, string user)
 		{
-			if (!_bot.IsOp(channel, user))
+			if (_bot.IsOp(channel, user) < 1)
 				return;
 			string[] args = command.Split(' ');
 			string arg = string.Empty;
@@ -99,6 +99,16 @@ namespace CSharpBot
 				case "cmd":
 				case "command":
 					_bot.SendRaw(arg);
+					break;
+				case "join":
+					if (!string.IsNullOrEmpty(args[1]))
+						_bot.JoinChannel(args[1]);
+					break;
+				case "part":
+					if (string.IsNullOrEmpty(args[1]))
+						_bot.PartChannel(channel);
+					else if (_bot.IsOp(channel, user) >= 2 && _bot.IsChannel(args[1]))
+						_bot.PartChannel(args[1]);
 					break;
 				case "exit":
 				case "quit":
