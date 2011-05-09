@@ -12,6 +12,7 @@ namespace CSharpBot
 		private readonly int _port;
 		private string _channel;
 		private string _nick;
+		public int NickNum = 2;
 
 		private bool _quitting;
 

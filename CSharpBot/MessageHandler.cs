@@ -42,7 +42,8 @@ namespace CSharpBot
 							_bot.SetOps(channel, users.ToArray());
 							break;
 						case "433": //Nick already in use
-							_bot.ChangeNick(_bot.Nick + "|2");
+							_bot.ChangeNick(_bot.Nick.Split('|')[0] + "|" + _bot.NickNum);
+							_bot.NickNum++;
 							break;
 						case "JOIN": //User joins channel
 							string nick = Bot.HostToNick(splitMsg[0]);
