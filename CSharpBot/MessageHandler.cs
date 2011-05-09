@@ -18,6 +18,7 @@ namespace CSharpBot
 		public void HandleMessage(string msg)
 		{
 			string[] splitMsg = msg.Split(' ');
+			string channel;
 
 			Console.WriteLine(" [IN] {0}", msg);
 
@@ -32,8 +33,8 @@ namespace CSharpBot
 						case "001": //First message sent by server after connecting
 							_bot.DoJoinQueue();
 							break;
-						case "353": //Sent after joining a channel (contains list of users in the channel (/NAMES))
-							string channel = splitMsg[4];
+						case "353": //Sent after a NAMES command
+							channel = splitMsg[4];
 							var users = new List<string>();
 							for (int i = 5; i < splitMsg.Length; i++ )
 								if (splitMsg[i].TrimStart(':').StartsWith("@"))
@@ -41,15 +42,30 @@ namespace CSharpBot
 							_bot.SetOps(channel, users.ToArray());
 							break;
 						case "433": //Nick already in use
+							_bot.ChangeNick(_bot.Nick + "|2");
 							break;
 						case "JOIN": //User joins channel
+							string nick = Bot.HostToNick(splitMsg[0]);
+							if (nick == _bot.Nick)
+								break;
+							channel = splitMsg[2].TrimStart(':');
+							_bot.SendRaw(string.Format("NAMES {0}", channel));
+							_bot.SendToChannel(string.Format("Welcome to {0}, {1}!", channel, nick), channel);
+							_bot.SendToNick(string.Format("Your current access level in {0} is {1}", channel, _bot.IsOp(channel, nick)), nick);
+							break;
+						case "MODE":
+							if (splitMsg[3].ToLower().Contains("o"))
+							{
+								channel = splitMsg[2];
+								_bot.SendRaw("NAMES " + channel);
+							}
 							break;
 						case "PART": //User parts channel
 							break;
 						case "QUIT": //User quits
 							break;
 						case "PRIVMSG": //Message received (either private or in one of the joined channels)
-							if (_bot.IsChannel(splitMsg[2]) || splitMsg[2] == _bot.Nick)
+							if ((_bot.IsChannel(splitMsg[2]) || splitMsg[2] == _bot.Nick) && splitMsg[3].StartsWith(":."))
 							{
 								string user = splitMsg[0].TrimStart(':').Split('!')[0];
 								string command = string.Empty;
@@ -94,6 +110,13 @@ namespace CSharpBot
 				case "say":
 					_bot.SendToChannel(arg, channel);
 					break;
+				case "act":
+				case "do":
+				case "me":
+				case "em":
+				case "emote":
+					_bot.SendRaw(string.Format("PRIVMSG {0} :\u0001ACTION {1}\u0001", channel, arg));
+					break;
 				case "raw":
 				case "irccmd":
 				case "cmd":
@@ -112,6 +135,11 @@ namespace CSharpBot
 					break;
 				case "exit":
 				case "quit":
+					if (user.ToLower().Contains("bot"))
+					{
+						_bot.SendToChannel("Bots can't harm me.", channel);
+						return;
+					}
 					if (!string.IsNullOrEmpty(arg))
 						_bot.Quit(arg);
 					else

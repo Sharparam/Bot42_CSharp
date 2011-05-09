@@ -89,7 +89,18 @@ namespace CSharpBot
 			Console.WriteLine("Disconnected from {0}", _server);
 		}
 
-		private static string ParseChannel(string channel)
+		public void ChangeNick(string newNick)
+		{
+			_nick = newNick;
+			SendRaw("NICK " + _nick);
+		}
+
+		public static string HostToNick(string hostString)
+		{
+			return hostString.TrimStart(':').Split('!')[0];
+		}
+
+		public static string ParseChannel(string channel)
 		{
 			if (!channel.StartsWith("#"))
 				channel = "#" + channel;
@@ -141,6 +152,7 @@ namespace CSharpBot
 			channel = ParseChannel(channel);
 			if (_chanOps.ContainsKey(channel))
 			{
+				Console.WriteLine("Resetting ops list for channel {0}...", channel);
 				_chanOps[channel].Clear();
 				AddOps(channel, users);
 			}
@@ -159,6 +171,7 @@ namespace CSharpBot
 				if (user.StartsWith("@"))
 					user = user.TrimStart('@');
 				_chanOps[channel].Add(user);
+				Console.WriteLine("Added {0} to the op list of {1}", user, channel);
 			}
 		}
 
@@ -239,6 +252,12 @@ namespace CSharpBot
 				Console.WriteLine("[OUT] PRIVMSG {0} :{1}", channel, msg);
 				_ircWriter.WriteLine("PRIVMSG {0} :{1}", channel, msg);
 			}
+		}
+
+		public void SendToNick(string msg, string nick)
+		{
+			Console.WriteLine("[OUT] NOTICE {0} :{1}", nick, msg);
+			_ircWriter.WriteLine("NOTICE {0} :{1}", nick, msg);
 		}
 	}
 }
