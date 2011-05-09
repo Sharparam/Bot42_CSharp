@@ -1,0 +1,9 @@
+
+*.suo
+/Bot42_CSharp.5.1.ReSharper.user
+/_ReSharper.Bot42_CSharp
+/CSharpBot/bin
+/CSharpBot/obj
+/CSharpBot/CSharpBot.csproj.user
+/CSharpBot.Bot42/bin
+/CSharpBot.Bot42/obj
