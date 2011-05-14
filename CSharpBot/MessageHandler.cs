@@ -7,7 +7,7 @@ namespace CSharpBot
 {
 	public class MessageHandler
 	{
-		private Bot _bot;
+		private readonly Bot _bot;
 		private const char _CMD_PREFIX = '.';
 
 		public MessageHandler(Bot bot)
@@ -18,7 +18,6 @@ namespace CSharpBot
 		public void HandleMessage(string msg)
 		{
 			string[] splitMsg = msg.Split(' ');
-			string channel;
 
 			Console.WriteLine(" [IN] {0}", msg);
 
@@ -28,6 +27,7 @@ namespace CSharpBot
 					_bot.SendRaw(string.Format("PONG {0}", splitMsg[1]));
 					break;
 				default:
+					string channel;
 					switch (splitMsg[1])
 					{
 						case "001": //First message sent by server after connecting
@@ -63,10 +63,19 @@ namespace CSharpBot
 							break;
 						case "PART": //User parts channel
 							break;
+						case "KICK":
+							if (splitMsg[3] == _bot.Nick)
+							{
+								channel = splitMsg[2];
+								_bot.PartChannel(channel);
+								Console.WriteLine("Kicked from channel {0}, attempting to rejoin...", channel);
+								_bot.JoinChannel(channel);
+							}
+							break;
 						case "QUIT": //User quits
 							break;
 						case "PRIVMSG": //Message received (either private or in one of the joined channels)
-							if ((_bot.IsChannel(splitMsg[2]) || splitMsg[2] == _bot.Nick) && splitMsg[3].StartsWith(":."))
+							if ((_bot.IsChannel(splitMsg[2]) && splitMsg[3].StartsWith(":" + _CMD_PREFIX)) || splitMsg[2] == _bot.Nick)
 							{
 								string user = splitMsg[0].TrimStart(':').Split('!')[0];
 								string command = string.Empty;
@@ -74,7 +83,7 @@ namespace CSharpBot
 								{
 									command += splitMsg[i] + ' ';
 								}
-								command = command.TrimStart(new char[]{':', '.'});
+								command = command.TrimStart(new[]{':', '.'});
 								HandleCommand(command, splitMsg[2], user);
 							}
 							break;
