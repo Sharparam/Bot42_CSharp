@@ -5,7 +5,7 @@ namespace CSharpBot
 {
 	public static class BotHandler
 	{
-		private static List<Bot> _bots = new List<Bot>();
+		private static readonly List<Bot> _bots = new List<Bot>();
 
 		public static Bot CreateBot(string server, int port, string nick)
 		{
