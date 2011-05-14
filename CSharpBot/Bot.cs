@@ -111,6 +111,11 @@ namespace CSharpBot
 		public void JoinChannel(string channel)
 		{
 			channel = ParseChannel(channel);
+			if (_joinedChannels.Contains(channel))
+			{
+				Console.WriteLine("ERROR: Can't join channel {0}, already in that channel.", channel);
+				return;
+			}
 			_ircWriter.WriteLine("JOIN {0}", channel);
 			_joinedChannels.Add(channel);
 			if (_chanOps.ContainsKey(channel))
@@ -136,6 +141,18 @@ namespace CSharpBot
 				JoinChannel(channel);
 			}
 			_joinQueue.Clear();
+		}
+
+		public void PartChannel(string channel)
+		{
+			channel = ParseChannel(channel);
+
+			if (!_joinedChannels.Contains(channel))
+				return;
+
+			_ircWriter.WriteLine("PART {0}", channel);
+			Console.WriteLine("Parted channel {0}", channel);
+			_joinedChannels.Remove(channel);
 		}
 
 		public void SetOp(string channel, string user)
@@ -212,18 +229,6 @@ namespace CSharpBot
 		public bool IsInChannel(string channel)
 		{
 			return _joinedChannels.Contains(channel);
-		}
-
-		public void PartChannel(string channel)
-		{
-			channel = ParseChannel(channel);
-
-			if (!_joinedChannels.Contains(channel))
-				return;
-
-			_ircWriter.WriteLine("PART {0}", channel);
-			Console.WriteLine("Parted channel {0}", channel);
-			_joinedChannels.Remove(channel);
 		}
 
 		public void Quit()
