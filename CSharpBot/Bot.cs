@@ -13,6 +13,7 @@ namespace CSharpBot
 		private string _channel;
 		private string _nick;
 		public int NickNum = 2;
+		private Random _rand;
 
 		private bool _quitting;
 
@@ -22,6 +23,7 @@ namespace CSharpBot
 		private StreamReader _ircReader;
 
 		private MessageHandler _msgHandler;
+		private QuoteHandler _quoteHandler;
 
 		private readonly List<string> _joinQueue;
 		private readonly List<string> _joinedChannels;
@@ -35,6 +37,7 @@ namespace CSharpBot
 			_port = port;
 			_nick = nick;
 			_msgHandler = new MessageHandler(this);
+			_quoteHandler = new QuoteHandler("Quotes");
 			_joinQueue = new List<string>();
 			_joinedChannels = new List<string>();
 			_chanOps = new Dictionary<string, List<string>>();
@@ -88,6 +91,56 @@ namespace CSharpBot
 			Console.WriteLine("Closing server connection...");
 			_ircServ.Close();
 			Console.WriteLine("Disconnected from {0}", _server);
+		}
+
+		public void LoadQuotes()
+		{
+			_quoteHandler.LoadAllQuotes();
+		}
+
+		public List<string> GetLoadedQuotes()
+		{
+			return _quoteHandler.GetLoadedQuotes();
+		}
+
+		public string GetRandomQuote(string quoteName)
+		{
+			if (!_quoteHandler.QuotesLoaded(quoteName))
+			{
+				Console.WriteLine("Quotes from " + quoteName + " are not loaded.");
+				return quoteName + " quotes not loaded!";
+			}
+			var tempQuotes = _quoteHandler.GetQuotes(quoteName);
+			_rand = new Random(DateTime.Now.Millisecond);
+			int randIndex = _rand.Next(0, tempQuotes.Count - 1);
+			string quote = string.Format("{0}. {1}", randIndex + 1, tempQuotes[randIndex]);
+			return quote;
+		}
+
+		public string GetQuote(string quoteName, int quoteIndex)
+		{
+			if (!_quoteHandler.QuotesLoaded(quoteName))
+			{
+				Console.WriteLine("Quotes from " + quoteName + " are not loaded.");
+				return quoteName + " quotes not loaded!";
+			}
+			var tempQuotes = _quoteHandler.GetQuotes(quoteName);
+			string quote;
+			try
+			{
+				quote = string.Format("{0}. {1}", quoteIndex + 1, tempQuotes[quoteIndex]);
+			}
+			catch(ArgumentOutOfRangeException ex)
+			{
+				Console.WriteLine(ex.GetType() + "! Details: " + ex.Message);
+				quote = "The specified quote was not found in the quote list.";
+			}
+			catch(Exception ex)
+			{
+				Console.WriteLine(ex.GetType() + "! Details: " + ex.Message);
+				quote = "Unknown error occurred (" + ex.GetType() + ")!";
+			}
+			return quote;
 		}
 
 		public void ChangeNick(string newNick)
@@ -186,8 +239,7 @@ namespace CSharpBot
 					if (user == op)
 						return;
 				}
-				if (user.StartsWith("@"))
-					user = user.TrimStart('@');
+				user = user.TrimStart(new[]{':', '@'});
 				_chanOps[channel].Add(user);
 				Console.WriteLine("Added {0} to the op list of {1}", user, channel);
 			}

@@ -41,6 +41,9 @@ namespace CSharpBot
 									users.Add(splitMsg[i]);
 							_bot.SetOps(channel, users.ToArray());
 							break;
+						case "376": //End of MOTD
+							_bot.LoadQuotes();
+							break;
 						case "433": //Nick already in use
 							_bot.ChangeNick(_bot.Nick.Split('|')[0] + "|" + _bot.NickNum);
 							_bot.NickNum++;
@@ -132,6 +135,49 @@ namespace CSharpBot
 				case "cmd":
 				case "command":
 					_bot.SendRaw(arg);
+					break;
+				case "quote":
+					if (!string.IsNullOrEmpty(args[1]) && string.IsNullOrEmpty(args[2]))
+					{
+						string quoteName = args[1].ToLower();
+						_bot.SendToChannel(_bot.GetRandomQuote(quoteName), channel);
+					}
+					else if (args.Length > 2 && !string.IsNullOrEmpty(args[2]))
+					{
+						string quoteName = args[1].ToLower();
+						try
+						{
+							int quoteIndex = int.Parse(args[2]);
+							_bot.SendToChannel(_bot.GetQuote(quoteName, quoteIndex - 1), channel);
+						}
+						catch(OverflowException ex)
+						{
+							Console.WriteLine("OVERFLOW in quote specific section! Details: " + ex.Message);
+							_bot.SendToChannel("That index is out of range!", channel);
+						}
+						catch(Exception ex)
+						{
+							Console.WriteLine(ex.GetType() + " in quote specific section! Details: " + ex.Message);
+							_bot.SendToChannel("Unknown error occurred (" + ex.GetType() + ")", channel);
+						}
+					}
+					else
+					{
+						Console.WriteLine("Printing loaded quote databases to user " + user);
+						try
+						{
+							_bot.SendToNick("Loaded quote databases:", user);
+							foreach (var quoteName in _bot.GetLoadedQuotes())
+							{
+								_bot.SendToNick(quoteName, user);
+							}
+							_bot.SendToNick("Type .quote <quoteName> [index] to get a quote", user);
+						}
+						catch (Exception ex)
+						{
+							Console.WriteLine("Unknown error occurred when printing loaded quote databases: " + ex.GetType() + " Details: " + ex.Message);
+						}
+					}
 					break;
 				case "join":
 					if (!string.IsNullOrEmpty(args[1]))
