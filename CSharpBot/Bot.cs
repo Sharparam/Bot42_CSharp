@@ -48,7 +48,23 @@ namespace CSharpBot
 			try
 			{
 				Console.WriteLine("Connecting to {0} on port {1}...", _server, _port);
-				_ircServ = new TcpClient(_server, _port);
+				int connTries = 0;
+				bool connected = false;
+				while (!connected && connTries < 5)
+				{
+					connTries++;
+					Console.WriteLine("Connection try #{0}...", connTries);
+					try
+					{
+						_ircServ = new TcpClient(_server, _port);
+					}
+					catch (Exception)
+					{
+						Console.WriteLine("Failed to connect" + (connTries < 5 ? ", retrying..." : "."));
+					}
+				}
+				if (!connected)
+					throw new Exception(string.Format("Connection failed after {0} tries.", connTries));
 				Console.WriteLine("Creating server stream...");
 				_ircStream = _ircServ.GetStream();
 				Console.WriteLine("Creating IRC reader...");
@@ -65,6 +81,7 @@ namespace CSharpBot
 			catch(Exception ex)
 			{
 				Console.WriteLine("[ERR] Exception: " + ex.GetType() + " " + ex.Message);
+				_quitting = true;
 			}
 			string inputLine;
 			while (!_quitting)
@@ -79,6 +96,11 @@ namespace CSharpBot
 
 		public void Disconnect()
 		{
+			if (_ircServ == null)
+			{
+				Console.WriteLine("Connection failed. Exiting...");
+				return;
+			}
 			Console.WriteLine("Disconnecting from {0}", _server);
 			if (!_quitting)
 				Quit();

@@ -130,12 +130,17 @@ namespace CSharpBot
 				case "emote":
 					_bot.SendRaw(string.Format("PRIVMSG {0} :\u0001ACTION {1}\u0001", channel, arg));
 					break;
+				case "exec":
+					//TODO: Execute file
+					//Continue to "raw" for now
+					//break;
 				case "raw":
 				case "irccmd":
 				case "cmd":
 				case "command":
 					_bot.SendRaw(arg);
 					break;
+                case "fact":
 				case "quote":
 					if (!string.IsNullOrEmpty(args[1]) && string.IsNullOrEmpty(args[2]))
 					{
@@ -178,6 +183,13 @@ namespace CSharpBot
 							Console.WriteLine("Unknown error occurred when printing loaded quote databases: " + ex.GetType() + " Details: " + ex.Message);
 						}
 					}
+					break;
+				case "info":
+				case "about":
+					_bot.SendToChannel("Bot42_CSharp by F16Gaming, type .help for help.", channel);
+					break;
+                case "help":
+					_bot.SendToNick("HELP has not been added yet.", user);
 					break;
 				case "join":
 					if (!string.IsNullOrEmpty(args[1]))
