@@ -57,6 +57,7 @@ namespace CSharpBot
 					try
 					{
 						_ircServ = new TcpClient(_server, _port);
+						connected = true;
 					}
 					catch (Exception)
 					{
@@ -64,19 +65,24 @@ namespace CSharpBot
 					}
 				}
 				if (!connected)
-					throw new Exception(string.Format("Connection failed after {0} tries.", connTries));
-				Console.WriteLine("Creating server stream...");
-				_ircStream = _ircServ.GetStream();
-				Console.WriteLine("Creating IRC reader...");
-				_ircReader = new StreamReader(_ircStream);
-				Console.WriteLine("Creating IRC writer...");
-				_ircWriter = new StreamWriter(_ircStream);
-				Console.WriteLine("Setting writer properties...");
-				_ircWriter.AutoFlush = true;
-				Console.WriteLine("Sending NICK command with parameter: {0}", _nick);
-				_ircWriter.WriteLine("NICK {0}", _nick);
-				Console.WriteLine("Sending USER command with parameter: {0} 0 * :{0}", _nick);
-				_ircWriter.WriteLine("USER {0} 0 * :{0}", _nick);
+				{
+					_quitting = true; //throw new Exception(string.Format("Connection failed after {0} tries.", connTries));
+				}
+				else
+				{
+					Console.WriteLine("Creating server stream...");
+					_ircStream = _ircServ.GetStream();
+					Console.WriteLine("Creating IRC reader...");
+					_ircReader = new StreamReader(_ircStream);
+					Console.WriteLine("Creating IRC writer...");
+					_ircWriter = new StreamWriter(_ircStream);
+					Console.WriteLine("Setting writer properties...");
+					_ircWriter.AutoFlush = true;
+					Console.WriteLine("Sending NICK command with parameter: {0}", _nick);
+					_ircWriter.WriteLine("NICK {0}", _nick);
+					Console.WriteLine("Sending USER command with parameter: {0} 0 * :{0}", _nick);
+					_ircWriter.WriteLine("USER {0} 0 * :{0}", _nick);
+				}
 			}
 			catch(Exception ex)
 			{
@@ -104,15 +110,22 @@ namespace CSharpBot
 			Console.WriteLine("Disconnecting from {0}", _server);
 			if (!_quitting)
 				Quit();
-			Console.WriteLine("Closing IRC writer...");
-			_ircWriter.Close();
-			Console.WriteLine("Closing IRC reader...");
-			_ircReader.Close();
-			Console.WriteLine("Closing IRC stream...");
-			_ircStream.Close();
-			Console.WriteLine("Closing server connection...");
-			_ircServ.Close();
-			Console.WriteLine("Disconnected from {0}", _server);
+			try
+			{
+				Console.WriteLine("Closing IRC writer...");
+				_ircWriter.Close();
+				Console.WriteLine("Closing IRC reader...");
+				_ircReader.Close();
+				Console.WriteLine("Closing IRC stream...");
+				_ircStream.Close();
+				Console.WriteLine("Closing server connection...");
+				_ircServ.Close();
+				Console.WriteLine("Disconnected from {0}", _server);
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("[ERR] FATAL: writer, reader and stream were NULL when server was NOT NULL (" + ex.GetType() + ")");
+			}
 		}
 
 		public void LoadQuotes()
