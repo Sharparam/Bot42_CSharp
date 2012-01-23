@@ -76,6 +76,12 @@ namespace CSharpBot
 							}
 							break;
 						case "QUIT": //User quits
+							string quitter = Bot.HostToNick(splitMsg[0]);
+							if (quitter == _bot.Nick && !_bot.Quitting)
+							{
+								Console.WriteLine("!!! I QUIT !!!");
+								_bot.Quit("case \"QUIT\" REACHED. ATTEMPTING RECONNECT AS PER CONFIGURATION............");
+							}
 							break;
 						case "PRIVMSG": //Message received (either private or in one of the joined channels)
 							if ((_bot.IsChannel(splitMsg[2]) && splitMsg[3].StartsWith(":" + _CMD_PREFIX)) || splitMsg[2] == _bot.Nick)
@@ -112,7 +118,7 @@ namespace CSharpBot
 				{
 					arg = string.Empty;
 					for (int i = 2; i < args.Length; i++)
-						arg += args[i];
+						arg += args[i] + ' ';
 				}
 			}
 

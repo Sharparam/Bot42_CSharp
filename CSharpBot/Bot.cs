@@ -16,6 +16,7 @@ namespace CSharpBot
 		private Random _rand;
 
 		private bool _quitting;
+		public bool Quitting { get { return _quitting; } }
 
 		private TcpClient _ircServ;
 		private NetworkStream _ircStream;
@@ -47,6 +48,7 @@ namespace CSharpBot
 		{
 			try
 			{
+				_quitting = false;
 				Console.WriteLine("Connecting to {0} on port {1}...", _server, _port);
 				int connTries = 0;
 				bool connected = false;
@@ -89,12 +91,22 @@ namespace CSharpBot
 				Console.WriteLine("[ERR] Exception: " + ex.GetType() + " " + ex.Message);
 				_quitting = true;
 			}
-			string inputLine;
 			while (!_quitting)
 			{
-				while ((inputLine = _ircReader.ReadLine()) != null)
+				if (_ircReader == null)
+					break;
+				try
 				{
-					_msgHandler.HandleMessage(inputLine);
+					string inputLine;
+					while ((inputLine = _ircReader.ReadLine()) != null)
+					{
+						_msgHandler.HandleMessage(inputLine);
+					}
+				}
+				catch(IOException ex)
+				{
+					Console.WriteLine("IOExecption!");
+					break;
 				}
 			}
 			Disconnect();

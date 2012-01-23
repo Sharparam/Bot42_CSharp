@@ -87,7 +87,7 @@ namespace CSharpBot
 			foreach (var line in lines)
 			{
 				tempQuotes.Add(line);
-				Console.WriteLine("Quote #" + quoteNum + " added to " + quoteName + " quotes!");
+				//Console.WriteLine("Quote #" + quoteNum + " added to " + quoteName + " quotes!");
 				if (quoteNum < lines.Length)
 					quoteNum++;
 			}
